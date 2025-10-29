@@ -1,0 +1,11 @@
+name: betafpv-ultrathink
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  - python=3.11
+  - pip
+  - pip:
+    - pyserial==3.5
+    - pymavlink==2.4.41
+    - tk
