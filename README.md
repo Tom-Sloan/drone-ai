@@ -1,8 +1,48 @@
-# BETAFPV Configurator - UltraThink Edition
+# BETAFPV Configurator & Air65 Drone Control - UltraThink Edition
 
-A Python GUI application for reading and monitoring data from BETAFPV devices via serial port. Supports both **MSP (MultiWii Serial Protocol)** and **MAVLink 1.0** protocols.
+A comprehensive Python toolkit for BETAFPV devices:
+1. **BETAFPV Configurator** - Monitor and read data from BETAFPV transmitters
+2. **Air65 Drone Control** - Direct MSP control of Air65 drones via USB
 
-## Features
+Supports **MSP (MultiWii Serial Protocol)** and **MAVLink 1.0** protocols.
+
+---
+
+## 🚁 NEW: Air65 Drone Control System
+
+**Direct USB control of your Air65 drone with real-time FPV feed!**
+
+### Quick Start for Drone Control
+
+```bash
+# Launch the drone control GUI
+./run_drone.sh
+
+# Or directly
+python3 drone_control.py
+```
+
+### Features
+- ✈️ **Manual Control**: Sliders for throttle, roll, pitch, yaw
+- 📹 **Live FPV Feed**: Real-time USB camera display
+- 📊 **Real-Time Telemetry**: Battery, attitude, RSSI, armed state
+- 🎯 **50 Hz Control Loop**: Smooth, continuous command transmission
+- 🛡️ **Safety Features**: Emergency stop, arm/disarm, automatic failsafe prevention
+
+### Documentation
+- **[Complete Drone Control Guide](docs/DRONE_CONTROL_GUIDE.md)** - Setup, usage, safety guidelines
+- **[MSP Command Reference](docs/MSP_COMMANDS.md)** - Protocol specifications and examples
+
+### Requirements for Drone Control
+1. BETAFPV Air65 drone with USB connection
+2. Betaflight configured with `RX_MSP` enabled
+3. USB camera (optional, for FPV feed)
+
+⚠️ **IMPORTANT**: Remove propellers for initial testing!
+
+---
+
+## 📡 BETAFPV Configurator Features
 
 - **Auto port detection**: Automatically scans and lists all available serial ports with descriptions
 - **One-click refresh**: Rescan for ports without restarting the app
@@ -169,26 +209,33 @@ The application supports MAVLink with the following messages:
 
 ```
 drone_simulator/
-├── src/                       # Source code
-│   ├── betafpv_gui.py        # Main GUI application
-│   ├── serial_comm.py        # Serial communication handler
-│   ├── msp_parser.py         # MSP protocol parser
-│   ├── mavlink_parser.py     # MAVLink protocol parser
+├── src/                           # Source code
+│   ├── drone_control_gui.py      # 🚁 NEW: Air65 drone control GUI
+│   ├── msp_control_loop.py       # 🚁 NEW: 50 Hz MSP control loop
+│   ├── betafpv_gui.py            # BETAFPV configurator GUI
+│   ├── serial_comm.py            # Serial communication handler
+│   ├── msp_parser.py             # MSP protocol parser (extended for control)
+│   ├── mavlink_parser.py         # MAVLink protocol parser
 │   ├── betafpv_custom_parser.py  # Custom BETAFPV protocol parser
-│   └── joystick_widget.py    # 2D joystick visualization widget
-├── docs/                      # Documentation
-│   ├── BETAFPV_PROTOCOL.md   # Protocol documentation
-│   ├── JOYSTICK_GUIDE.md     # Joystick usage guide
-│   └── TROUBLESHOOTING.md    # Troubleshooting guide
-├── tests/                     # Test files
-│   └── test_serial_raw.py    # Serial communication tests
-├── main.py                    # Application launcher
-├── run.sh                     # Quick start script (Mac/Linux)
-├── run.bat                    # Quick start script (Windows)
-├── environment.yml            # Anaconda environment config
-├── requirements.txt           # pip requirements
-├── CHANGELOG.md               # Version history
-└── README.md                  # This file
+│   ├── camera_widget.py          # USB camera feed widget
+│   └── joystick_widget.py        # 2D joystick visualization widget
+├── docs/                          # Documentation
+│   ├── DRONE_CONTROL_GUIDE.md    # 🚁 NEW: Drone control guide
+│   ├── MSP_COMMANDS.md           # 🚁 NEW: MSP command reference
+│   ├── BETAFPV_PROTOCOL.md       # Protocol documentation
+│   ├── JOYSTICK_GUIDE.md         # Joystick usage guide
+│   └── TROUBLESHOOTING.md        # Troubleshooting guide
+├── tests/                         # Test files
+│   └── test_serial_raw.py        # Serial communication tests
+├── drone_control.py               # 🚁 NEW: Drone control launcher
+├── run_drone.sh                   # 🚁 NEW: Drone control script
+├── main.py                        # BETAFPV configurator launcher
+├── run.sh                         # Configurator script (Mac/Linux)
+├── run.bat                        # Configurator script (Windows)
+├── environment.yml                # Anaconda environment config
+├── requirements.txt               # pip requirements
+├── CHANGELOG.md                   # Version history
+└── README.md                      # This file
 ```
 
 ## Troubleshooting

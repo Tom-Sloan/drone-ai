@@ -14,6 +14,7 @@ from msp_parser import MSPParser, MSPCommands
 from mavlink_parser import MAVLinkParser, MAVLinkMessages
 from betafpv_custom_parser import BETAFPVCustomParser
 from joystick_widget import JoystickWidget
+from camera_widget import CameraWidget
 import serial.tools.list_ports
 import json
 import os
@@ -25,7 +26,10 @@ class BETAFPVConfiguratorGUI:
     def __init__(self, root):
         self.root = root
         self.root.title("BETAFPV Configurator - UltraThink")
-        self.root.geometry("1100x800")
+        self.root.geometry("1400x900")
+
+        # Camera widget reference
+        self.camera_widget = None
 
         # Serial connection
         self.serial_conn = None
@@ -76,6 +80,9 @@ class BETAFPVConfiguratorGUI:
 
         # Start UI update loop
         self._update_ui_loop()
+
+        # Set up cleanup on window close
+        self.root.protocol("WM_DELETE_WINDOW", self._on_closing)
 
     def _build_ui(self):
         """Build the user interface"""
@@ -181,39 +188,58 @@ class BETAFPVConfiguratorGUI:
         )
         self.link_quality_label.grid(row=2, column=7, padx=5, sticky='w')
 
-        # Main content area - split into two columns
+        # Main content area - split into three columns
         content_frame = ttk.Frame(self.root)
         content_frame.pack(fill='both', expand=True, padx=10, pady=5)
 
-        # Left column - Telemetry data
+        # Left column - Telemetry data (compact)
         telemetry_frame = ttk.LabelFrame(content_frame, text="Telemetry Data", padding=10)
-        telemetry_frame.pack(side='left', fill='both', expand=True, padx=(0, 5))
+        telemetry_frame.pack(side='left', fill='y', padx=(0, 5))
 
         # Battery section
-        battery_section = ttk.LabelFrame(telemetry_frame, text="Battery & Power", padding=10)
-        battery_section.pack(fill='x', pady=5)
+        battery_section = ttk.LabelFrame(telemetry_frame, text="Battery & Power", padding=8)
+        battery_section.pack(fill='x', pady=3)
 
         self.voltage_label = self._create_telemetry_row(battery_section, "Voltage:", "0.00 V", 0)
         self.current_label = self._create_telemetry_row(battery_section, "Current:", "0.00 A", 1)
         self.rssi_label = self._create_telemetry_row(battery_section, "RSSI:", "0", 2)
 
         # Attitude section
-        attitude_section = ttk.LabelFrame(telemetry_frame, text="Attitude", padding=10)
-        attitude_section.pack(fill='x', pady=5)
+        attitude_section = ttk.LabelFrame(telemetry_frame, text="Attitude", padding=8)
+        attitude_section.pack(fill='x', pady=3)
 
         self.roll_label = self._create_telemetry_row(attitude_section, "Roll:", "0.0°", 0)
         self.pitch_label = self._create_telemetry_row(attitude_section, "Pitch:", "0.0°", 1)
         self.yaw_label = self._create_telemetry_row(attitude_section, "Yaw:", "0.0°", 2)
 
         # Status section
-        status_section = ttk.LabelFrame(telemetry_frame, text="Flight Status", padding=10)
-        status_section.pack(fill='x', pady=5)
+        status_section = ttk.LabelFrame(telemetry_frame, text="Flight Status", padding=8)
+        status_section.pack(fill='x', pady=3)
 
         self.armed_label = self._create_telemetry_row(status_section, "Armed:", "NO", 0)
         self.mode_label = self._create_telemetry_row(status_section, "Mode:", "Unknown", 1)
 
+        # Middle column - Camera, Gimbals, and Channels
+        middle_frame = ttk.Frame(content_frame)
+        middle_frame.pack(side='left', fill='both', expand=True, padx=5)
+
+        # Camera feed
+        camera_section = ttk.LabelFrame(middle_frame, text="Camera Feed - USB2.0 PC CAMERA ultrathink", padding=10)
+        camera_section.pack(fill='x', pady=5)
+
+        try:
+            self.camera_widget = CameraWidget(camera_section, width=400, height=300, camera_index=0, fps=30)
+            self.camera_widget.pack()
+        except Exception as e:
+            error_label = ttk.Label(
+                camera_section,
+                text=f"Camera initialization error: {str(e)}",
+                foreground='red'
+            )
+            error_label.pack()
+
         # Gimbal/Joystick section (Channels 1-4)
-        gimbal_section = ttk.LabelFrame(telemetry_frame, text="Gimbals (CH1-4)", padding=10)
+        gimbal_section = ttk.LabelFrame(middle_frame, text="Gimbals (CH1-4)", padding=10)
         gimbal_section.pack(fill='x', pady=5)
 
         # Create frame for two joysticks side by side
@@ -230,8 +256,12 @@ class BETAFPVConfiguratorGUI:
         self.right_joystick = JoystickWidget(right_gimbal_frame, size=120)
         self.right_joystick.pack(pady=5)
 
-        self.right_joystick_label = ttk.Label(right_gimbal_frame, text="X: +0.00  Y: +0.00",
-                                               font=('Courier', 9))
+        self.right_joystick_label = self._create_selectable_label(
+            right_gimbal_frame,
+            "X: +0.00  Y: +0.00",
+            font=('Courier', 9),
+            width=20
+        )
         self.right_joystick_label.pack()
 
         # Throttle Gimbal (CH3 & CH4)
@@ -244,12 +274,16 @@ class BETAFPVConfiguratorGUI:
         self.throttle_joystick = JoystickWidget(throttle_gimbal_frame, size=120)
         self.throttle_joystick.pack(pady=5)
 
-        self.throttle_joystick_label = ttk.Label(throttle_gimbal_frame, text="X: +0.00  Y: +0.00",
-                                                  font=('Courier', 9))
+        self.throttle_joystick_label = self._create_selectable_label(
+            throttle_gimbal_frame,
+            "X: +0.00  Y: +0.00",
+            font=('Courier', 9),
+            width=20
+        )
         self.throttle_joystick_label.pack()
 
         # RC Channels 5-8 section
-        rc_section = ttk.LabelFrame(telemetry_frame, text="Channels 5-8 (Switches)", padding=10)
+        rc_section = ttk.LabelFrame(middle_frame, text="Channels 5-8 (Switches)", padding=10)
         rc_section.pack(fill='x', pady=5)
 
         self.rc_labels = []
@@ -293,16 +327,53 @@ class BETAFPVConfiguratorGUI:
         self.bytes_counter_label = ttk.Label(debug_frame, text="Bytes RX: 0", font=('Courier', 9))
         self.bytes_counter_label.pack(side='left', padx=10)
 
+    def _create_selectable_label(self, parent, text, font=('Arial', 11, 'bold'), width=20, **kwargs):
+        """Create a selectable label using Entry widget"""
+        # Try to get the background color, fallback to a sensible default
+        try:
+            bg_color = parent.cget('background')
+        except:
+            # For ttk widgets or widgets without background option, use default
+            style = ttk.Style()
+            try:
+                bg_color = style.lookup('TLabelframe', 'background')
+            except:
+                bg_color = '#f0f0f0'  # Light gray fallback
+
+        entry = tk.Entry(
+            parent,
+            font=font,
+            width=width,
+            relief='flat',
+            state='readonly',
+            readonlybackground=bg_color,
+            cursor='xterm',
+            **kwargs
+        )
+
+        # Insert initial text
+        entry.config(state='normal')
+        entry.insert(0, text)
+        entry.config(state='readonly')
+
+        return entry
+
+    def _update_selectable_label(self, entry_widget, text, foreground=None):
+        """Update text in a selectable label (Entry widget)"""
+        entry_widget.config(state='normal')
+        entry_widget.delete(0, tk.END)
+        entry_widget.insert(0, text)
+        if foreground:
+            entry_widget.config(fg=foreground)
+        entry_widget.config(state='readonly')
+
     def _create_telemetry_row(self, parent, label_text, value_text, row):
         """Create a telemetry data row"""
         ttk.Label(parent, text=label_text, width=12).grid(row=row, column=0, sticky='w', pady=2)
-        value_label = ttk.Label(
-            parent,
-            text=value_text,
-            font=('Arial', 11, 'bold'),
-            width=20
-        )
+
+        value_label = self._create_selectable_label(parent, value_text)
         value_label.grid(row=row, column=1, sticky='w', pady=2)
+
         return value_label
 
     def _load_config(self):
@@ -712,28 +783,29 @@ class BETAFPVConfiguratorGUI:
             current = self.telemetry_data.get('current', 0.0)
             rssi = self.telemetry_data.get('rssi', 0)
 
-            self.voltage_label.config(text=f"{voltage:.2f} V")
-            self.current_label.config(text=f"{current:.2f} A")
-            self.rssi_label.config(text=f"{rssi}")
+            self._update_selectable_label(self.voltage_label, f"{voltage:.2f} V")
+            self._update_selectable_label(self.current_label, f"{current:.2f} A")
+            self._update_selectable_label(self.rssi_label, f"{rssi}")
 
             # Update attitude
             roll = self.telemetry_data.get('roll', 0.0)
             pitch = self.telemetry_data.get('pitch', 0.0)
             yaw = self.telemetry_data.get('yaw', 0.0)
 
-            self.roll_label.config(text=f"{roll:.1f}°")
-            self.pitch_label.config(text=f"{pitch:.1f}°")
-            self.yaw_label.config(text=f"{yaw:.1f}°")
+            self._update_selectable_label(self.roll_label, f"{roll:.1f}°")
+            self._update_selectable_label(self.pitch_label, f"{pitch:.1f}°")
+            self._update_selectable_label(self.yaw_label, f"{yaw:.1f}°")
 
             # Update status
             armed = self.telemetry_data.get('armed', False)
             mode = self.telemetry_data.get('flight_mode', 'Unknown')
 
-            self.armed_label.config(
-                text="YES" if armed else "NO",
+            self._update_selectable_label(
+                self.armed_label,
+                "YES" if armed else "NO",
                 foreground="red" if armed else "green"
             )
-            self.mode_label.config(text=str(mode))
+            self._update_selectable_label(self.mode_label, str(mode))
 
             # Update RC channels and joysticks
             rc_channels = self.telemetry_data.get('rc_channels', [])
@@ -744,22 +816,22 @@ class BETAFPVConfiguratorGUI:
                 ch1 = rc_channels[0] if len(rc_channels) > 0 else 1500
                 ch2 = rc_channels[1] if len(rc_channels) > 1 else 1500
                 self.right_joystick.update_from_rc(ch1, ch2)
-                self.right_joystick_label.config(text=self.right_joystick.get_position_text())
+                self._update_selectable_label(self.right_joystick_label, self.right_joystick.get_position_text())
 
                 # Throttle Gimbal: CH4 (X) and CH3 (Y)
                 # Note: CH3 is typically throttle (vertical), CH4 is yaw (horizontal)
                 ch3 = rc_channels[2] if len(rc_channels) > 2 else 1500
                 ch4 = rc_channels[3] if len(rc_channels) > 3 else 1500
                 self.throttle_joystick.update_from_rc(ch4, ch3)
-                self.throttle_joystick_label.config(text=self.throttle_joystick.get_position_text())
+                self._update_selectable_label(self.throttle_joystick_label, self.throttle_joystick.get_position_text())
 
             # Update channels 5-8 display
             for i, label in enumerate(self.rc_labels):
                 ch_index = i + 4  # Channels 5-8 (indices 4-7)
                 if ch_index < len(rc_channels):
-                    label.config(text=f"{rc_channels[ch_index]}")
+                    self._update_selectable_label(label, f"{rc_channels[ch_index]}")
                 else:
-                    label.config(text="----")
+                    self._update_selectable_label(label, "----")
 
             # Update protocol
             protocol = self.telemetry_data.get('protocol', 'N/A')
@@ -799,6 +871,22 @@ class BETAFPVConfiguratorGUI:
         """Clear the log text"""
         self.log_text.delete('1.0', tk.END)
         self.log_message("Log cleared")
+
+    def _on_closing(self):
+        """Handle window close event"""
+        # Cleanup camera
+        if self.camera_widget:
+            try:
+                self.camera_widget.cleanup()
+            except Exception as e:
+                print(f"Error cleaning up camera: {e}")
+
+        # Disconnect serial
+        if self.serial_conn and self.serial_conn.is_connected:
+            self._disconnect()
+
+        # Destroy window
+        self.root.destroy()
 
 
 def main():

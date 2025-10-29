@@ -23,6 +23,9 @@ class MSPCommands(IntEnum):
     MSP_ALTITUDE = 109
     MSP_ANALOG = 110
     MSP_BATTERY_STATE = 130
+    MSP_SET_RAW_RC = 200  # Send RC channel data
+    MSP_ARM = 151  # Arm the drone
+    MSP_DISARM = 152  # Disarm the drone
 
 
 class MSPParser:
@@ -153,14 +156,74 @@ class MSPParser:
 
     @staticmethod
     def parse_status(payload: bytes) -> dict:
-        """Parse MSP_STATUS message"""
-        if len(payload) >= 11:
-            cycle_time, i2c_error, sensor, flag = struct.unpack('<HHHI', payload[:11])
+        """
+        Parse MSP_STATUS message
+        Format varies by Betaflight version:
+        - 10 bytes: Betaflight 3.x
+        - 11 bytes: Betaflight 3.x with current_setting
+        - 15+ bytes: Betaflight 4.x+ with extended fields
+        """
+        try:
+            # All versions have at least these first 10 bytes
+            if len(payload) >= 10:
+                # Parse first 10 bytes: cycle_time, i2c_error, sensor, flag
+                cycle_time, i2c_error, sensor, flag = struct.unpack('<HHHI', payload[:10])
+
+                # Extract armed state from flag bits
+                # Bit 0: ARMED
+                armed = bool(flag & 0x01)
+
+                return {
+                    'cycle_time': cycle_time,
+                    'i2c_error': i2c_error,
+                    'sensors': sensor,
+                    'flags': flag,
+                    'armed': armed
+                }
+        except struct.error as e:
+            print(f"MSP_STATUS parse error: {e}, payload length: {len(payload)}")
+        return {}
+
+    @staticmethod
+    def create_set_raw_rc(channels: list) -> bytes:
+        """
+        Create MSP_SET_RAW_RC command to send RC channel data
+
+        Args:
+            channels: List of 8 channel values (1000-2000, center at 1500)
+                     [roll, pitch, yaw, throttle, aux1, aux2, aux3, aux4]
+
+        Returns:
+            MSP command packet bytes
+        """
+        # Ensure we have 8 channels
+        if len(channels) < 8:
+            channels = list(channels) + [1500] * (8 - len(channels))
+        elif len(channels) > 8:
+            channels = channels[:8]
+
+        # Clamp values to valid range (1000-2000)
+        channels = [max(1000, min(2000, int(ch))) for ch in channels]
+
+        # Pack as 8 unsigned 16-bit little-endian integers
+        payload = struct.pack('<8H', *channels)
+
+        # Create MSP request
+        return MSPParser.create_request(MSPCommands.MSP_SET_RAW_RC, payload)
+
+    @staticmethod
+    def parse_rc(payload: bytes) -> dict:
+        """Parse MSP_RC message (RC channel data from receiver)"""
+        if len(payload) >= 16:
+            channels = struct.unpack('<8H', payload[:16])
             return {
-                'cycle_time': cycle_time,
-                'i2c_error': i2c_error,
-                'sensors': sensor,
-                'flags': flag,
-                'armed': bool(flag & 0x01)
+                'roll': channels[0],
+                'pitch': channels[1],
+                'yaw': channels[2],
+                'throttle': channels[3],
+                'aux1': channels[4],
+                'aux2': channels[5],
+                'aux3': channels[6],
+                'aux4': channels[7]
             }
         return {}
