@@ -37,6 +37,12 @@ env/
 *~
 .DS_Store
 
+# AI Code Assistants
+.claude/
+.cursor/
+.github/copilot-instructions.md
+**Claude**
+
 # Jupyter Notebook
 .ipynb_checkpoints
 
