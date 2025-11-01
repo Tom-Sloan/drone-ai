@@ -1,0 +1,106 @@
+# Environment Configuration for Drone RL Training
+# Controls simulation physics, task parameters, and reward shaping
+
+simulation:
+  # Physics parameters
+  timestep: 0.01                    # Physics simulation timestep (100 Hz)
+  gravity: -9.81                    # Gravity in m/s^2
+
+  # Initial conditions
+  initial_height: 0.5               # Starting height in meters
+  initial_position_noise: 0.1       # Random noise added to initial position (meters)
+  initial_velocity_noise: 0.05      # Random noise added to initial velocity (m/s)
+
+  # Domain randomization (for sim-to-real transfer)
+  randomization:
+    enabled: true                   # Enable/disable domain randomization
+    mass_range: [0.025, 0.035]      # Air65 mass variation (kg) - nominal ~30g
+    drag_range: [0.9, 1.1]          # Drag coefficient multiplier
+    motor_thrust_noise: 0.02        # Motor thrust noise (±2%)
+    motor_response_time: [0.015, 0.025]  # Motor time constant (seconds)
+    wind_enabled: false             # Add wind disturbances
+    wind_magnitude: [0.0, 0.5]      # Wind speed range (m/s)
+    ground_effect: true             # Enable ground effect physics
+
+environment:
+  # Episode parameters
+  max_episode_steps: 500            # Maximum steps per episode (5 seconds @ 100Hz)
+
+  # Task: Hover Stabilization
+  task_type: "hover"                # Options: "hover", "waypoint", "trajectory"
+  target_position: [0.0, 0.0, 0.5]  # Target hover position [x, y, z] in meters
+
+  # Success criteria
+  success_threshold:
+    position_tolerance: 0.1         # Position error tolerance (meters)
+    velocity_tolerance: 0.2         # Velocity tolerance (m/s)
+    attitude_tolerance: 5.0         # Attitude error tolerance (degrees)
+    hold_duration: 50               # Steps to hold position for success (0.5 sec)
+
+  # Boundaries (episode terminates if exceeded)
+  bounds:
+    x_min: -2.0
+    x_max: 2.0
+    y_min: -2.0
+    y_max: 2.0
+    z_min: 0.05                     # Minimum height (ground collision)
+    z_max: 2.0                      # Maximum height
+    roll_max: 60.0                  # Maximum roll angle (degrees)
+    pitch_max: 60.0                 # Maximum pitch angle (degrees)
+
+  # Observation space
+  observation:
+    normalize: true                 # Use StateNormalizer
+    include_history: false          # Include previous states (for RNN)
+    history_length: 4               # Number of previous states to include
+
+  # Action space
+  action:
+    type: "continuous"              # Options: "continuous", "discrete"
+    smooth_actions: false           # Apply action smoothing filter
+    smoothing_factor: 0.3           # Smoothing coefficient (if enabled)
+
+rewards:
+  # Reward function weights
+  position_weight: 10.0             # Weight for position error reward
+  velocity_weight: 5.0              # Weight for velocity reward
+  attitude_weight: 3.0              # Weight for attitude stability reward
+  energy_weight: -0.001             # Weight for energy consumption penalty
+
+  # Penalties and bonuses
+  crash_penalty: -100.0             # Penalty for crashing
+  success_bonus: 10.0               # Bonus for successful hover
+  out_of_bounds_penalty: -50.0     # Penalty for going out of bounds
+
+  # Reward shaping
+  dense_reward: true                # Use dense rewards (every step) vs sparse
+  normalize_reward: false           # Normalize rewards to [-1, 1]
+
+rendering:
+  # Visualization settings (for evaluation/debugging)
+  enable: false                     # Enable PyBullet GUI
+  camera_distance: 1.5              # Camera distance from drone (meters)
+  camera_yaw: 45                    # Camera yaw angle (degrees)
+  camera_pitch: -30                 # Camera pitch angle (degrees)
+  render_fps: 30                    # Rendering frame rate
+  record_video: false               # Record episodes as video
+  video_path: "data/videos"         # Path to save videos
+
+# Waypoint task configuration (used if task_type: "waypoint")
+waypoint_task:
+  waypoints:
+    - [0.5, 0.5, 0.5]
+    - [1.0, 0.5, 0.7]
+    - [1.0, 1.0, 0.5]
+    - [0.5, 1.0, 0.5]
+  waypoint_tolerance: 0.15          # Distance to consider waypoint reached
+  waypoint_bonus: 5.0               # Bonus for reaching each waypoint
+  completion_bonus: 50.0            # Bonus for completing all waypoints
+
+# Trajectory task configuration (used if task_type: "trajectory")
+trajectory_task:
+  trajectory_type: "circle"         # Options: "circle", "figure8", "spiral"
+  trajectory_radius: 0.8            # Radius for circular trajectories
+  trajectory_height: 0.5            # Height for trajectory
+  trajectory_speed: 0.3             # Speed along trajectory (m/s)
+  tracking_tolerance: 0.2           # Distance tolerance for trajectory following

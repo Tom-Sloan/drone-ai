@@ -1,5 +1,19 @@
+# Existing dependencies (updated to latest stable versions)
 pyserial==3.5
 pymavlink==2.4.49
 opencv-python==4.12.0.88
 pillow==12.0.0
-numpy>=2.0.0
+numpy==2.3.4
+
+# RL and Training dependencies
+gymnasium==1.2.1
+pufferlib==3.0.0
+torch==2.9.0
+pybullet==3.2.7
+tensorboard==2.20.0
+pyyaml==6.0.3
+wandb==0.22.3
+
+# Utilities
+tqdm
+matplotlib

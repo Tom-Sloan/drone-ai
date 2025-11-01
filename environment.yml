@@ -1,14 +1,28 @@
 name: betafpv-ultrathink
 channels:
-  - conda-forge
-  - defaults
+    - conda-forge
+    - defaults
 dependencies:
-  - python=3.11
-  - pip
-  - pip:
-    - pyserial==3.5
-    - pymavlink==2.4.49
-    - opencv-python==4.12.0.88
-    - pillow==12.0.0
-    - numpy>=2.0.0
-    - tk
+    - python=3.11
+    - pip
+    - pip:
+          # Existing dependencies (updated to latest stable versions)
+          - pyserial
+          - pymavlink
+          - opencv-python
+          - pillow
+          - numpy
+          - tk
+
+          # RL and Training dependencies
+          - gymnasium
+          - pufferlib
+          - torch
+          - pybullet
+          - tensorboard
+          - pyyaml
+          - wandb
+
+          # Utilities
+          - tqdm
+          - matplotlib

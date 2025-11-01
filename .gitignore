@@ -60,3 +60,12 @@ htmlcov/
 
 # OS
 Thumbs.db
+
+# RL Training Data
+data/
+*.pt
+*.pth
+*.onnx
+wandb/
+runs/
+tensorboard_logs/

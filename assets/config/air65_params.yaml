@@ -1,0 +1,46 @@
+# BETAFPV Air65 Physical Parameters
+# Quick reference for drone specifications
+
+general:
+  name: "BETAFPV Air65"
+  category: "Micro Whoop / Tiny Whoop"
+  wheelbase: 65  # mm
+  weight: 30  # grams (without battery)
+
+motors:
+  model: "0603 19000KV Brushless"
+  kv_rating: 19000
+  count: 4
+  max_current: 2.0  # Amperes per motor
+
+props:
+  size: "40mm Tri-blade"
+  pitch: "31mm"
+  material: "Polycarbonate"
+
+battery:
+  type: "1S LiPo"
+  capacity: 300  # mAh
+  voltage_range: [3.0, 4.2]  # Volts [min, max]
+  weight: 8  # grams
+
+flight_controller:
+  model: "F4 1S AIO"
+  firmware: "Betaflight"
+  gyro: "MPU6000"
+  rx_protocol: "MSP"  # For USB control
+
+camera:
+  model: "C02 Micro"
+  fov: 170  # degrees
+  weight: 5  # grams
+
+vtx:
+  power: 25  # mW
+  channels: "5.8GHz 40CH"
+
+performance:
+  max_flight_time: 4  # minutes
+  max_speed: 8  # m/s estimated
+  hover_current: 1.5  # Amperes total
+  max_current: 8.0  # Amperes total

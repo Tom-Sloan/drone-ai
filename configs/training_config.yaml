@@ -1,0 +1,164 @@
+# Training Configuration for PufferLib + PPO
+# Controls hyperparameters, training schedule, and logging
+
+pufferlib:
+  # Vectorized environment settings
+  num_envs: 64                      # Number of parallel environments
+  rollout_length: 128               # Steps to collect per environment before update
+  batch_size: 2048                  # Total batch size (num_envs * rollout_length)
+  num_workers: 4                    # CPU workers for environment parallelization
+
+  # Environment backend
+  backend: "serial"                 # Options: "serial", "multiprocessing", "ray"
+  env_pool_size: 64                 # Size of environment pool
+
+ppo:
+  # Learning rate
+  learning_rate: 3.0e-4             # Initial learning rate
+  lr_schedule: "constant"           # Options: "constant", "linear", "cosine"
+  lr_warmup_steps: 0                # Warmup steps for learning rate
+
+  # PPO hyperparameters
+  gamma: 0.99                       # Discount factor
+  gae_lambda: 0.95                  # GAE lambda for advantage estimation
+  clip_range: 0.2                   # PPO clipping parameter
+  clip_range_vf: null               # Value function clipping (null = no clipping)
+
+  # Loss coefficients
+  vf_coef: 0.5                      # Value function loss coefficient
+  ent_coef: 0.01                    # Entropy bonus coefficient
+  max_grad_norm: 0.5                # Gradient clipping threshold
+
+  # Training iterations
+  n_epochs: 4                       # Number of epochs per update
+  n_minibatches: 4                  # Number of minibatches per epoch
+
+  # PPO-specific
+  normalize_advantage: true         # Normalize advantages
+  use_gae: true                     # Use Generalized Advantage Estimation
+  target_kl: 0.01                   # Target KL divergence (for early stopping)
+
+network:
+  # Policy network architecture
+  architecture: "mlp"               # Options: "mlp", "lstm", "gru"
+
+  # MLP settings
+  hidden_sizes: [128, 128]          # Hidden layer sizes
+  activation: "relu"                # Options: "relu", "tanh", "elu"
+  use_layer_norm: false             # Use layer normalization
+
+  # LSTM/GRU settings (if architecture is recurrent)
+  lstm_hidden_size: 128             # LSTM hidden size
+  lstm_num_layers: 1                # Number of LSTM layers
+
+  # Action distribution
+  action_std_init: 0.6              # Initial action standard deviation
+  use_state_dependent_std: false    # Learn state-dependent std vs fixed
+  min_std: 0.1                      # Minimum standard deviation
+  max_std: 1.0                      # Maximum standard deviation
+
+  # Value function
+  separate_value_network: false     # Use separate network for value function
+  value_network_hidden_sizes: [128, 128]  # Hidden sizes for value network
+
+training:
+  # Total training budget
+  total_timesteps: 5_000_000        # Total environment steps
+  num_iterations: null              # Number of training iterations (computed from timesteps)
+
+  # Evaluation
+  eval_freq: 10_000                 # Evaluate every N timesteps
+  eval_episodes: 20                 # Number of evaluation episodes
+  eval_deterministic: true          # Use deterministic policy for evaluation
+
+  # Checkpointing
+  save_freq: 50_000                 # Save checkpoint every N timesteps
+  checkpoint_dir: "data/checkpoints"  # Directory to save checkpoints
+  keep_best_n: 5                    # Keep N best checkpoints
+  save_replay_buffer: false         # Save replay buffer (for off-policy)
+
+  # Early stopping
+  early_stopping: false             # Enable early stopping
+  early_stopping_patience: 100      # Iterations without improvement before stopping
+  early_stopping_threshold: 0.01    # Minimum improvement threshold
+
+  # Curriculum learning
+  curriculum_learning: false        # Enable curriculum learning
+  curriculum_stages:                # Progressive difficulty stages
+    - name: "easy"
+      timesteps: 1_000_000
+      config_overrides:
+        environment:
+          bounds:
+            roll_max: 30.0
+            pitch_max: 30.0
+    - name: "medium"
+      timesteps: 2_000_000
+      config_overrides:
+        simulation:
+          randomization:
+            enabled: true
+    - name: "hard"
+      timesteps: 2_000_000
+      config_overrides:
+        simulation:
+          randomization:
+            wind_enabled: true
+
+logging:
+  # TensorBoard
+  use_tensorboard: true             # Enable TensorBoard logging
+  tensorboard_dir: "data/logs"      # TensorBoard log directory
+  log_freq: 100                     # Log every N timesteps
+
+  # Weights & Biases
+  use_wandb: false                  # Enable W&B logging
+  wandb_project: "drone-rl"         # W&B project name
+  wandb_entity: null                # W&B entity (username/team)
+  wandb_run_name: null              # W&B run name (null = auto-generate)
+  wandb_tags: ["ppo", "hover"]      # W&B tags
+
+  # Console logging
+  verbose: 1                        # Verbosity level (0=none, 1=info, 2=debug)
+  print_freq: 1000                  # Print progress every N timesteps
+  progress_bar: true                # Show tqdm progress bar
+
+  # Metrics to log
+  log_metrics:
+    - "episode_reward"
+    - "episode_length"
+    - "success_rate"
+    - "crash_rate"
+    - "policy_loss"
+    - "value_loss"
+    - "entropy"
+    - "kl_divergence"
+    - "explained_variance"
+    - "learning_rate"
+
+optimization:
+  # Optimizer settings
+  optimizer: "adam"                 # Options: "adam", "sgd", "rmsprop"
+  adam_eps: 1.0e-5                  # Adam epsilon
+  weight_decay: 0.0                 # L2 weight decay
+
+  # Batch processing
+  use_mixed_precision: false        # Use mixed precision training (AMP)
+  gradient_accumulation_steps: 1    # Accumulate gradients over N steps
+
+device:
+  # Compute device
+  device: "auto"                    # Options: "auto", "cpu", "cuda", "mps"
+  cuda_device: 0                    # CUDA device index (if device="cuda")
+  num_threads: 4                    # Number of CPU threads for PyTorch
+
+seed:
+  # Random seeds for reproducibility
+  seed: 42                          # Master random seed
+  deterministic: false              # Use deterministic operations (slower)
+
+debug:
+  # Debugging options
+  check_nan: false                  # Check for NaN in gradients/losses
+  profile: false                    # Profile training loop
+  save_initial_checkpoint: true     # Save checkpoint before training starts

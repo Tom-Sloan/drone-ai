@@ -1,0 +1,272 @@
+<?xml version="1.0"?>
+<!-- URDF Model for BETAFPV Air65 Drone -->
+<!-- 65mm Wheelbase, ~30g Total Mass -->
+<robot name="air65">
+
+  <!-- Base Link (Main Frame) -->
+  <link name="base_link">
+    <inertial>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <mass value="0.030"/>  <!-- 30 grams total -->
+      <inertia
+        ixx="3.8e-5"
+        iyy="3.8e-5"
+        izz="6.0e-5"
+        ixy="0.0"
+        ixz="0.0"
+        iyz="0.0"/>
+    </inertial>
+
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+        <!-- Main frame body (simplified as box) -->
+        <box size="0.065 0.065 0.025"/>  <!-- 65mm x 65mm x 25mm -->
+      </geometry>
+      <material name="carbon_fiber">
+        <color rgba="0.2 0.2 0.2 1.0"/>  <!-- Dark gray for carbon fiber -->
+      </material>
+    </visual>
+
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+        <box size="0.065 0.065 0.025"/>
+      </geometry>
+    </collision>
+  </link>
+
+  <!-- Front-Right Motor (Motor 1) -->
+  <link name="motor_fr">
+    <inertial>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <mass value="0.004"/>  <!-- 4g motor -->
+      <inertia
+        ixx="1.0e-7"
+        iyy="1.0e-7"
+        izz="1.0e-7"
+        ixy="0.0"
+        ixz="0.0"
+        iyz="0.0"/>
+    </inertial>
+
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+        <cylinder length="0.015" radius="0.006"/>  <!-- 6mm diameter, 15mm height -->
+      </geometry>
+      <material name="motor_metal">
+        <color rgba="0.5 0.5 0.5 1.0"/>  <!-- Gray for motor -->
+      </material>
+    </visual>
+
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+        <cylinder length="0.015" radius="0.006"/>
+      </geometry>
+    </collision>
+  </link>
+
+  <joint name="motor_fr_joint" type="fixed">
+    <parent link="base_link"/>
+    <child link="motor_fr"/>
+    <origin xyz="0.0325 0.0325 0.0075" rpy="0 0 0"/>  <!-- Front-right position -->
+  </joint>
+
+  <!-- Front-Left Motor (Motor 2) -->
+  <link name="motor_fl">
+    <inertial>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <mass value="0.004"/>
+      <inertia
+        ixx="1.0e-7"
+        iyy="1.0e-7"
+        izz="1.0e-7"
+        ixy="0.0"
+        ixz="0.0"
+        iyz="0.0"/>
+    </inertial>
+
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+        <cylinder length="0.015" radius="0.006"/>
+      </geometry>
+      <material name="motor_metal">
+        <color rgba="0.5 0.5 0.5 1.0"/>
+      </material>
+    </visual>
+
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+        <cylinder length="0.015" radius="0.006"/>
+      </geometry>
+    </collision>
+  </link>
+
+  <joint name="motor_fl_joint" type="fixed">
+    <parent link="base_link"/>
+    <child link="motor_fl"/>
+    <origin xyz="-0.0325 0.0325 0.0075" rpy="0 0 0"/>  <!-- Front-left position -->
+  </joint>
+
+  <!-- Back-Left Motor (Motor 3) -->
+  <link name="motor_bl">
+    <inertial>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <mass value="0.004"/>
+      <inertia
+        ixx="1.0e-7"
+        iyy="1.0e-7"
+        izz="1.0e-7"
+        ixy="0.0"
+        ixz="0.0"
+        iyz="0.0"/>
+    </inertial>
+
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+        <cylinder length="0.015" radius="0.006"/>
+      </geometry>
+      <material name="motor_metal">
+        <color rgba="0.5 0.5 0.5 1.0"/>
+      </material>
+    </visual>
+
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+        <cylinder length="0.015" radius="0.006"/>
+      </geometry>
+    </collision>
+  </link>
+
+  <joint name="motor_bl_joint" type="fixed">
+    <parent link="base_link"/>
+    <child link="motor_bl"/>
+    <origin xyz="-0.0325 -0.0325 0.0075" rpy="0 0 0"/>  <!-- Back-left position -->
+  </joint>
+
+  <!-- Back-Right Motor (Motor 4) -->
+  <link name="motor_br">
+    <inertial>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <mass value="0.004"/>
+      <inertia
+        ixx="1.0e-7"
+        iyy="1.0e-7"
+        izz="1.0e-7"
+        ixy="0.0"
+        ixz="0.0"
+        iyz="0.0"/>
+    </inertial>
+
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+        <cylinder length="0.015" radius="0.006"/>
+      </geometry>
+      <material name="motor_metal">
+        <color rgba="0.5 0.5 0.5 1.0"/>
+      </material>
+    </visual>
+
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+        <cylinder length="0.015" radius="0.006"/>
+      </geometry>
+    </collision>
+  </link>
+
+  <joint name="motor_br_joint" type="fixed">
+    <parent link="base_link"/>
+    <child link="motor_br"/>
+    <origin xyz="0.0325 -0.0325 0.0075" rpy="0 0 0"/>  <!-- Back-right position -->
+  </joint>
+
+  <!-- Propellers (visual only, not collision) -->
+  <!-- Front-Right Propeller -->
+  <link name="prop_fr">
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+        <cylinder length="0.002" radius="0.020"/>  <!-- 40mm diameter, thin disc -->
+      </geometry>
+      <material name="propeller">
+        <color rgba="0.1 0.1 0.8 0.4"/>  <!-- Translucent blue -->
+      </material>
+    </visual>
+  </link>
+
+  <joint name="prop_fr_joint" type="continuous">
+    <parent link="motor_fr"/>
+    <child link="prop_fr"/>
+    <origin xyz="0 0 0.009" rpy="0 0 0"/>  <!-- Above motor -->
+    <axis xyz="0 0 1"/>
+  </joint>
+
+  <!-- Front-Left Propeller -->
+  <link name="prop_fl">
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+        <cylinder length="0.002" radius="0.020"/>
+      </geometry>
+      <material name="propeller">
+        <color rgba="0.1 0.1 0.8 0.4"/>
+      </material>
+    </visual>
+  </link>
+
+  <joint name="prop_fl_joint" type="continuous">
+    <parent link="motor_fl"/>
+    <child link="prop_fl"/>
+    <origin xyz="0 0 0.009" rpy="0 0 0"/>
+    <axis xyz="0 0 1"/>
+  </joint>
+
+  <!-- Back-Left Propeller -->
+  <link name="prop_bl">
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+        <cylinder length="0.002" radius="0.020"/>
+      </geometry>
+      <material name="propeller">
+        <color rgba="0.1 0.1 0.8 0.4"/>
+      </material>
+    </visual>
+  </link>
+
+  <joint name="prop_bl_joint" type="continuous">
+    <parent link="motor_bl"/>
+    <child link="prop_bl"/>
+    <origin xyz="0 0 0.009" rpy="0 0 0"/>
+    <axis xyz="0 0 1"/>
+  </joint>
+
+  <!-- Back-Right Propeller -->
+  <link name="prop_br">
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+        <cylinder length="0.002" radius="0.020"/>
+      </geometry>
+      <material name="propeller">
+        <color rgba="0.1 0.1 0.8 0.4"/>
+      </material>
+    </visual>
+  </link>
+
+  <joint name="prop_br_joint" type="continuous">
+    <parent link="motor_br"/>
+    <child link="prop_br"/>
+    <origin xyz="0 0 0.009" rpy="0 0 0"/>
+    <axis xyz="0 0 1"/>
+  </joint>
+
+</robot>

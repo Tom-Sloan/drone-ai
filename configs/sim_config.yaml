@@ -1,0 +1,158 @@
+# Simulation Configuration for Air65 Drone
+# Physical parameters and PyBullet settings
+
+drone:
+  # Basic properties
+  name: "BETAFPV Air65"
+  type: "quadrotor"
+  mass: 0.030                       # Total mass in kg (~30g)
+
+  # Geometry
+  wheelbase: 0.065                  # Motor-to-motor distance in meters (65mm)
+  arm_length: 0.0325                # Distance from center to motor (half wheelbase)
+  frame_height: 0.025               # Frame thickness in meters
+
+  # Inertia tensor (kg⋅m²) - computed for symmetric frame
+  inertia:
+    ixx: 3.8e-5                     # Roll inertia
+    iyy: 3.8e-5                     # Pitch inertia
+    izz: 6.0e-5                     # Yaw inertia
+    ixy: 0.0
+    ixz: 0.0
+    iyz: 0.0
+
+motors:
+  # Motor configuration
+  count: 4                          # Number of motors
+  layout: "quad_x"                  # Options: "quad_x", "quad_plus"
+
+  # Motor positions (relative to center, in meters)
+  # For quad_x layout:
+  positions:
+    - [0.0325, 0.0325, 0.0]         # Front-right
+    - [-0.0325, 0.0325, 0.0]        # Front-left
+    - [-0.0325, -0.0325, 0.0]       # Back-left
+    - [0.0325, -0.0325, 0.0]        # Back-right
+
+  # Motor directions (1 = CW, -1 = CCW)
+  directions: [1, -1, 1, -1]        # FR, FL, BL, BR
+
+  # Motor dynamics
+  max_thrust: 0.08                  # Maximum thrust per motor in Newtons
+  min_thrust: 0.0                   # Minimum thrust
+  hover_thrust: 0.0735              # Thrust per motor for hover (mass * g / 4)
+
+  # Motor response
+  thrust_coefficient: 1.0e-6        # k_f: thrust = k_f * omega^2
+  torque_coefficient: 1.0e-8        # k_m: torque = k_m * omega^2
+  time_constant: 0.02               # First-order motor dynamics time constant (seconds)
+  max_rpm: 30000                    # Maximum motor RPM
+
+propellers:
+  # Propeller specifications
+  diameter: 0.040                   # Propeller diameter in meters (40mm)
+  pitch: 0.031                      # Propeller pitch in meters (31mm)
+  blade_count: 3                    # Number of blades (triblade)
+
+  # Aerodynamics
+  thrust_coefficient: 0.1           # C_T
+  power_coefficient: 0.05           # C_P
+  drag_coefficient: 0.02            # Parasitic drag coefficient
+
+battery:
+  # Battery specifications (1S LiPo)
+  cells: 1                          # Number of cells
+  voltage_nominal: 3.7              # Nominal voltage per cell
+  voltage_max: 4.2                  # Maximum voltage per cell
+  voltage_min: 3.0                  # Minimum voltage per cell (safety cutoff)
+
+  # Capacity and discharge
+  capacity: 0.300                   # Capacity in Ah (300mAh)
+  internal_resistance: 0.1          # Internal resistance in ohms
+  discharge_rate: 25                # C-rating
+
+  # Discharge model
+  voltage_drop_rate: 0.1            # Voltage drop per amp-hour drawn
+
+aerodynamics:
+  # Aerodynamic coefficients
+  drag_coefficient_xy: 0.15         # Horizontal drag coefficient
+  drag_coefficient_z: 0.25          # Vertical drag coefficient
+
+  # Reference area for drag calculation
+  reference_area: 0.0042            # Frontal area in m² (65mm x 65mm)
+
+  # Ground effect
+  ground_effect_height: 0.5         # Height below which ground effect applies (meters)
+  ground_effect_coefficient: 0.3    # Thrust increase near ground (0-1)
+
+  # Air density
+  air_density: 1.225                # kg/m³ at sea level
+
+control:
+  # Control mixing matrix (maps thrust commands to motor speeds)
+  # Format: [motor1, motor2, motor3, motor4] = matrix * [thrust, roll, pitch, yaw]
+  mixing_matrix:
+    # [FR, FL, BL, BR]
+    thrust:  [1.0, 1.0, 1.0, 1.0]
+    roll:    [1.0, -1.0, -1.0, 1.0]
+    pitch:   [1.0, 1.0, -1.0, -1.0]
+    yaw:     [-1.0, 1.0, -1.0, 1.0]
+
+pybullet:
+  # PyBullet simulation settings
+  timestep: 0.01                    # Simulation timestep (100 Hz)
+  substeps: 4                       # Physics substeps per timestep
+
+  # Solver settings
+  num_solver_iterations: 150        # Constraint solver iterations
+  contact_erp: 0.2                  # Error reduction parameter
+  contact_cfm: 1.0e-6               # Constraint force mixing
+
+  # Rendering
+  enable_gui: false                 # Show PyBullet GUI
+  camera_distance: 1.5              # Default camera distance
+  camera_yaw: 45                    # Default camera yaw
+  camera_pitch: -30                 # Default camera pitch
+  camera_target: [0, 0, 0.5]        # Camera target position
+
+  # Debug visualization
+  show_collision_shapes: false      # Show collision shapes
+  show_reference_frame: false       # Show drone reference frame axes
+  show_force_vectors: false         # Show thrust force vectors
+
+sensors:
+  # Sensor noise models (for sim-to-real)
+  imu:
+    accelerometer_noise: 0.02       # Accelerometer noise (m/s²)
+    gyroscope_noise: 0.01           # Gyroscope noise (rad/s)
+    update_rate: 500                # IMU update rate (Hz)
+
+  barometer:
+    altitude_noise: 0.05            # Altitude noise (meters)
+    update_rate: 50                 # Barometer update rate (Hz)
+
+  gps:
+    position_noise: 0.5             # GPS position noise (meters)
+    velocity_noise: 0.1             # GPS velocity noise (m/s)
+    update_rate: 10                 # GPS update rate (Hz)
+
+disturbances:
+  # External disturbances (for robustness training)
+  wind:
+    enabled: false                  # Enable wind disturbances
+    constant_wind: [0.0, 0.0, 0.0]  # Constant wind velocity (m/s)
+    gust_magnitude: 0.5             # Wind gust magnitude (m/s)
+    gust_frequency: 0.1             # Wind gust frequency (Hz)
+
+  sensor_failures:
+    enabled: false                  # Enable random sensor failures
+    failure_probability: 0.001      # Probability of failure per step
+    recovery_probability: 0.01      # Probability of recovery per step
+
+# Initial conditions for simulation
+initial_conditions:
+  position: [0.0, 0.0, 0.5]         # Initial position [x, y, z]
+  orientation: [0.0, 0.0, 0.0]      # Initial orientation [roll, pitch, yaw] in degrees
+  velocity: [0.0, 0.0, 0.0]         # Initial velocity [vx, vy, vz]
+  angular_velocity: [0.0, 0.0, 0.0] # Initial angular velocity [wx, wy, wz] in rad/s
